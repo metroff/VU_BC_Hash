@@ -1,4 +1,4 @@
-#include "output.hpp"
+#include "file.hpp"
 
 void genrateDataFiles() {
     std::stringstream stream = generateStream();
