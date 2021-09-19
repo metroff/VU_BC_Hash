@@ -2,4 +2,4 @@
 
 #include "myLib.hpp"
 
-std::string hash(std::string);
+std::string myHash(const std::string&);
