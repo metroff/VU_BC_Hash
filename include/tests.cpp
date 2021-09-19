@@ -7,6 +7,7 @@
 #include "sha1.hpp"
 #include "sha256.hpp"
 
+// Main test wizard with all selectable options
 void runTestWizard() {
     std::string output = "1: Hash output length, deterministic algorithm test\n";
     output += "2: Benchmark line by line hashing (MyHash)\n";
@@ -32,10 +33,11 @@ void runTestWizard() {
 ///////////////////////////////////////////////////////////////////////
 // Deterministic, length tests
 ///////////////////////////////////////////////////////////////////////
+// Check if hash is deterministic run loop 100 times
 bool isHashDeterministic(const std::string& input, std::string filename) {
-    std::string hashText = hash(input);
+    std::string hashText = myHash(input);
     for (int i = 0; i < 100; i++) {
-        if (hashText != hash(input)) {
+        if (hashText != myHash(input)) {
             // std::cout << "File '" << filename << "' hashes are not the same.\n";
             return false;
         }
@@ -44,10 +46,11 @@ bool isHashDeterministic(const std::string& input, std::string filename) {
     return true;
 }
 
+// Check if hash output length does not change run loop 100 times
 bool testHashLength(const std::string& input, std::string filename) {
     std::string hashString;
     for (int i = 0; i < 100; i++) {
-        hashString = hash(input);
+        hashString = myHash(input);
         if (hashString.length() != 64) {
             // std::cout << "File '" << filename << "' hash length is not 64!\n";
             return false;
@@ -58,6 +61,7 @@ bool testHashLength(const std::string& input, std::string filename) {
     return true;
 }
 
+// Function for tests above
 void runHashLengthAndDeterministicTests() {
     initTest("Hash output length, deterministic algorithm test");
 
@@ -78,6 +82,7 @@ void runHashLengthAndDeterministicTests() {
         if (!flag2) break;
     }
 
+    std::cout << "\n";
     if (flag1) {
         std::cout << "Length of hash function output is always the same!\n";
     } else {
@@ -94,7 +99,7 @@ void runHashLengthAndDeterministicTests() {
 ///////////////////////////////////////////////////////////////////////
 // Speed tests
 ///////////////////////////////////////////////////////////////////////
-
+// Hashing one line at the time function
 void benchmarkMyHash(const std::string& filename) {
     Timer timer;
     double totalHashTime = 0;
@@ -107,16 +112,17 @@ void benchmarkMyHash(const std::string& filename) {
     for (int i = 0; i < timesRun; i++) {
         while(getline(input, line)) {
             timer.reset();
-            hash(line);
+            myHash(line);
             totalHashTime += timer.elapsed();
         }
     }
 
     std::cout << std::fixed << std::setprecision(6);
     std::cout << "MyHash total time: " << totalHashTime << " s.\n";
-    std::cout << "MyHash average time per run: " << totalHashTime*1000/timesRun << " ms.\n";
+    std::cout << "MyHash average time per run: " << (totalHashTime*1000)/timesRun << " ms.\n";
 }
 
+// Hashing one line at the time function with comparison to other algorithms
 void benchmarkMultipleHashesLineByLine(const std::string& filename) {
     Timer timer;
     double timeTable[4] = {0};
@@ -129,7 +135,7 @@ void benchmarkMultipleHashesLineByLine(const std::string& filename) {
     for (int i = 0; i < timesRun; i++) {
         while(getline(input, line)) {
             timer.reset();
-            hash(line);
+            myHash(line);
             timeTable[0] += timer.elapsed();
 
             timer.reset();
@@ -155,6 +161,7 @@ void benchmarkMultipleHashesLineByLine(const std::string& filename) {
     }
 }
 
+// Hashing whole file at the time function with comparison to other algorithms
 void benchmarkMultipleHashesWholeFile(const std::string& filename) {
     Timer timer;
     double timeTable[4] = {0};
@@ -167,7 +174,7 @@ void benchmarkMultipleHashesWholeFile(const std::string& filename) {
 
     for (int i = 0; i < timesRun; i++) {
         timer.reset();
-        hash(line);
+        myHash(line);
         timeTable[0] += timer.elapsed();
 
         timer.reset();
@@ -195,7 +202,7 @@ void benchmarkMultipleHashesWholeFile(const std::string& filename) {
 ///////////////////////////////////////////////////////////////////////
 // Collision test
 ///////////////////////////////////////////////////////////////////////
-
+// Tests for same hash output
 void testHashCollision() {
     initTest("MyHash collision test");
 
@@ -204,7 +211,7 @@ void testHashCollision() {
     std::string first, second;
     while (!stream.eof()) {
         stream >> first >> second;
-        if (hash(first) == hash(second)) {
+        if (myHash(first) == myHash(second)) {
             collisions++;
         }
     }
@@ -214,6 +221,7 @@ void testHashCollision() {
 ///////////////////////////////////////////////////////////////////////
 // Hex, bit difference test
 ///////////////////////////////////////////////////////////////////////
+// Calculated hash output hex and bit difference
 void testHashOutputDifference() {
     initTest("MyHash output difference in bits and hex test");
 
@@ -227,12 +235,12 @@ void testHashOutputDifference() {
     for (int i = 0; i < lineCount; i++) {
         stream >> first >> second;
 
-        hashFirst = hash(first);
-        hashSecond = hash(second);
+        hashFirst = myHash(first);
+        hashSecond = myHash(second);
 
         bitFirst = hexToBin(hashFirst);
         bitSecond = hexToBin(hashSecond);
-
+        // Hex checking
         int notEqualHexCount = 0; 
         double hexCountPercentage = 0.0;
 
@@ -244,7 +252,7 @@ void testHashOutputDifference() {
         if (hexMin > hexCountPercentage) hexMin = hexCountPercentage;
         if (hexMax < hexCountPercentage) hexMax = hexCountPercentage;
         hexAvg += hexCountPercentage;
-
+        // Bit checking
         int notEqualBitCount = 0; 
         double bitCountPercentage = 0.0;
 
@@ -270,6 +278,7 @@ void testHashOutputDifference() {
 ///////////////////////////////////////////////////////////////////////
 // Utility
 ///////////////////////////////////////////////////////////////////////
+// Helper function for better console navigation
 void initTest(std::string message, std::string filename, int iterations) {
     std::cout << "-------\n";
     if(message != "") {
@@ -284,6 +293,7 @@ void initTest(std::string message, std::string filename, int iterations) {
     std::cout << "-------\n\n";
 }
 
+// Function for converting hex symbols (char) to binary (4 bit) as string
 std::string hexToBin(std::string input) {
     int i = 0;
     std::string output = "";
@@ -348,9 +358,6 @@ std::string hexToBin(std::string input) {
                  << input[i] << std::endl;
         }
         i++;
-    }
-    if(output.length()!=256) {
-        exit(0);
     }
     return output;
 }

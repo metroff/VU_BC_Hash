@@ -29,6 +29,7 @@ std::stringstream generateStream(bool oneLetterDiff) {
     for(int i = 0; i < 4; i++){
         for (int j = 0; j < 25000; j++) {
             std::string first, second;
+            // Check for needed data stream
             if (!oneLetterDiff) {
                 first = generateRandomWord(length[i]);
                 second = generateRandomWord(length[i]);
