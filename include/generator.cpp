@@ -20,7 +20,7 @@ std::string generateRandomWord(int length) {
 }
 
 // Word stream generator
-std::stringstream generateStream() {
+std::stringstream generateStream(bool oneLetterDiff) {
     // Needed for normal printing
     bool firstLine = true;
     int length[4] = {10, 100, 500, 1000};
@@ -28,11 +28,17 @@ std::stringstream generateStream() {
     // For loops for 100000 entries
     for(int i = 0; i < 4; i++){
         for (int j = 0; j < 25000; j++) {
-            
-            std::string first = generateRandomWord(length[i]);
-            std::string second = generateRandomWord(length[i]);
-            while (first == second) {
-                second = generateRandomWord(length[i]); 
+            std::string first, second;
+            if (!oneLetterDiff) {
+                first = generateRandomWord(length[i]);
+                second = generateRandomWord(length[i]);
+                while (first == second) {
+                    second = generateRandomWord(length[i]); 
+                }
+            } else {
+                first = generateRandomWord(length[i]-1);
+                second = "b" + first;
+                first = "a" + first;
             }
             
             if (firstLine) {

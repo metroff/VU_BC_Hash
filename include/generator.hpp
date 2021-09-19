@@ -8,5 +8,5 @@
 
 int generateIntInRange(int, int);
 std::string generateRandomWord(int);
-std::stringstream generateStream();
+std::stringstream generateStream(bool oneLetterDiff = false);
 
