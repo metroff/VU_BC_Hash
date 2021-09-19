@@ -1,14 +1,16 @@
 #include "file.hpp"
 
 void genrateDataFiles() {
-    std::stringstream stream = generateStream();
-    genrateLongFile(stream, "data/long1.txt");
-    stream = generateStream();
-    genrateLongFile(stream, "data/long2.txt");
+    std::string string = generateRandomWord(10000);
+    genrateLongFile(string, "data/10000-1.txt");
+    string = generateRandomWord(10000);
+    genrateLongFile(string, "data/10000-2.txt");
 
-    std::string outString = generateStream().str();
-    genrateLongFile(outString, "data/longOneDiff1.txt", "a");
-    genrateLongFile(outString, "data/longOneDiff2.txt", "b");
+    std::string outString = generateRandomWord(10000);
+    std::string outString1 = "a" + outString;
+    std::string outString2 = "b" + outString;
+    genrateLongFile(outString1, "data/10000-a.txt.txt");
+    genrateLongFile(outString2, "data/10000-b.txt");
 }
 
 void genrateLongFile(std::stringstream& stream, std::string filename) {
@@ -17,9 +19,9 @@ void genrateLongFile(std::stringstream& stream, std::string filename) {
     output.close();
 }
 
-void genrateLongFile(std::string& out, std::string filename, std::string stringToAdd) {
+void genrateLongFile(std::string& out, std::string filename) {
     std::ofstream output(filename);
-    output << out << stringToAdd;
+    output << out;
     output.close();
 }
 
