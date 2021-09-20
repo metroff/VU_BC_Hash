@@ -8,3 +8,4 @@ void genrateLongFile(std::stringstream&, std::string);
 void genrateLongFile(std::string&, std::string);
 
 std::stringstream readFile(std::string);
+void usageText();
