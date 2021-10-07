@@ -1,4 +1,7 @@
 # `myHash` Hash funkcijos generatoriaus kūrimas
+### Palyginimas su kitų studentų generatoriais [čia.](https://github.com/metroff/VU_BC_Hash/tree/comparison)
+---
+
 ## Turinys
 - [Užduotis](#užduotis)
 - [Algoritmas](#algoritmas)
