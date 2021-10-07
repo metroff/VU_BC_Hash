@@ -1,4 +1,4 @@
-#include "hash.hpp"
+#include "metroffHash.hpp"
 
 // Function for converting I type to hexString
 template <typename I> std::string toHexString(I w, size_t hex_len = sizeof(I)<<1) {
@@ -20,7 +20,7 @@ unsigned int rightRotate(unsigned int n, unsigned int d)
 }
 
 // Main hash function
-std::string myHash(const std::string& input) {
+std::string metroffHash::myHash(const std::string& input) {
     std::string output = "";
     // Initial values
     unsigned int hexes[8] = {3189621198, 405587210, 2844532716, 1761483275, 152458759, 2779224377, 4151057064, 1000842129};

@@ -1,0 +1,16 @@
+#pragma once
+
+#include "include/myLib.hpp"
+#include "include/file.hpp"
+#include "include/timer.hpp"
+#include "include/console.hpp"
+#include "include/hashes/metroffHash.hpp"
+#include "include/hashes/domas404Hash.hpp"
+#include "include/hashes/IvoskaJHash.hpp"
+#include "include/hashes/MiautawnHash.hpp"
+#include "include/hashes/OvidijusVHash.hpp"
+#include "include/hashes/rendertomHash.hpp"
+#include "include/hashes/swoogieHash.hpp"
+#include "include/hashes/VabasouHash.hpp"
+#include "include/hashes/MantasM2001Hash.hpp"
+#include "include/hashes/EimantasVHash.hpp"

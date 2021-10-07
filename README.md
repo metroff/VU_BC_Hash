@@ -1,190 +1,128 @@
-# `myHash` Hash funkcijos generatoriaus kūrimas
+# Hash funkcijų palyginimas
 ## Turinys
 - [Užduotis](#užduotis)
-- [Algoritmas](#algoritmas)
 - [Programos paleidimas](#programos-paleidimas)
 - [Testavimas](#testavimas)
-  - [Maišos algoritmo tikrinimas](#hash-algorithm-test)
-  - [Spartos analizė maišant po vieną eilutę](#benchmark-line-by-line-hashing)
-  - [Spartos analizė lyginant su kitais algoritmais](#benchmark-with-md5-sha1-sha256)
+  - [Spartos analizė lyginant po vieną eilutę](#line-by-line-benchmark)
+  - [Spartos analizė lyginant visą failą](#whole-file-benchmark)
   - [Atsparumo "kolizijai" testas](#collision-test)
   - [Maišos skirtingumo testas](#difference-test)
-- [Išvados](#išvados)
+- [Apibendrinimas](#apibendrinimas)
+  - [Bendra rezultatų lentelė](#bendra-rezultatų-lentelė)
+  
 ## Užduotis
-Sukurkite maišos funkciją (hash), kuri atitiktų šiuos reikalavimus:
-1. Maišos funkcijos įėjimas gali būti bet kokio dydžio simbolių eilutė.
-2. Maišos funkcijos išėjimas visuomet yra to paties, fiksuoto, dydžio rezultatas.
-3. Maišos funkcija yra deterministinė, t. y., tam pačiam įvedimui išvedimas visuomet yra tas pats.
-4. Maišos funkcijos reikšmė bet kokiai input'o reikšmei yra apskaičiuojamas greitai - efektyviai.
-5. Iš hash funkcijos rezultato praktiškai neįmanoma atgaminti pradinio įvedimo.
-6. Maišos funkcija yra atspari "kolizijai" (praktiškai neįmanoma surasti tokių dviejų skirtingų argumentų, kad jiems gautume tą patį hash'ą).
-7. Bent minimaliai pakeitus įvedimą, maišos funkcijos rezultatas-kodas turi skirtis iš esmės, t.y., tenkinamas taip vadinamas lavinos efektas (angl. Avalanche effect).
----
 
-## Algoritmas
-Algoritmo pseudo-kodas
-```
-FUNCTION myHash(input: string) : string {
-    output <- ""                        
-    hexes <- [8]                        // initialize integer array with 8 elements
+Atlikti lyginamąją analizę naudojant sukurtus hash generatorius. Visos panaudotos hash funckijos buvo sujungtos į vieną programą.
 
-    length <- input.length              // initialize length with input length
-
-    num <- 1153
-    sum <- num
-
-    FOR i = 0 TO length                 // "randomize" sum and num variables 
-        sum <- num BITWISE_OR (int(input[i]) MOD num)
-        num <- num LEFT_ROTATE 5 + int(input[i]) - num
-
-    FOR i = 1 TO sum MOD 100            // mix up intial array values
-        hexes[i%8] = hexes[i%8] RIGHT_ROTATE 16
-    
-    FOR i = 0 TO 8                      // more mixups to reduce collisions and for avalanche
-        hexes[i] <- hexes[i] BITWISE_XOR (NOT hexes[7-i]) * num
-        hexes[7-i] <- hexes[7-i] BITWISE_OR (NOT hexes[i]) * sum
-    }
-    
-    FOR i = 0 TO 8 
-        output <- output + TO_HEX(hexes[i])
-
-    return output;
-}
-```
 ---
 
 ## Programos paleidimas
-Programa paleidžiama iš komandinės eilutės naudojant `./main` ir papildomus argumentus, pvz.:
+Programa paleidžiama iš komandinės eilutės naudojant `./main`:
 ```shell
-./main <input_text>     -- hash'o skaičiavimas įvestam tekstui
-./main -f <filepath>    -- hash'o skaičiavimas išoriniam failui
-./main -test            -- testų paleidimui
-```
-### Rankinis teksto įvedimas
-Paleidus programą `./main`, vietoje `<input_text>` reikia įrašyti norimą tekstą. Jeigu tekstas sudarytas iš kelių žodžių reikia naudoti kabutes.
-```shell
-> ./main "Hello world!"
-HASH: ccffdacf9ebeffbf51efebdf9f7ddfd72fdc953646a6de84047da52c6a60180d
-```
-### Išorinio failo nudojimas
-Paleidus programą `./main`, vietoje `<filepath>` reikia įrašyti kelią (path) iki failo.
-```shell
-> ./main ./data/a.txt
-HASH: 0566fbfdb3e56efbfd6ed2d7ed9954271cd52e0b44975aeae5a9974845dfd8ca
+./main
 ```
 ---
 
 ## Testavimas
-Paleidus programą `./main` su vėliavėle `-test` reikia pasirinkti vieną iš galimų testų.
-```shell
-> ./main -test
-1: Hash output length, deterministic algorithm test
-2: Benchmark line by line hashing (MyHash)
-3: Benchmark line by line hashing (MyHash, md5, sha1, sha256)
-4: Benchmark whole file hashing (MyHash, md5, sha1, sha256)
-5: MyHash collision test
-6: MyHash output difference in bits and hex test
-```
-### Hash algorithm test
-Šis testas tikrina 1-3 punktus([Užduotis](#užduotis)). Testo metu tikrinimui naudojami:
-- Tuščias failas (`empty.txt`).
-- Du failai sudaryti tik iš vieno, tačiau skirtingo, simbolio (`a.txt`, `b.txt`).
-- Du failai sudaryti iš daug (10000) atsitiktinai sugeneruotų simbolių (`10000-1.txt`, `10000-2.txt`).
-- Du failai sudaryti iš daug (10001) simbolių, bet skirtųsi vienas nuo kito tik vienu simboliu (`10000-a.txt`, `10000-b.txt`).
+### Line by line benchmark
+Šis metodas skirtas palyginti maišos funkcijų greitaveiką, maišant `konstitucija.txt' failą po vieną eilutę.
 
-Šio metodo pagalba įsitikinama, kad nepriklausomai nuo įvesties ilgio, išvestis visada bus 64 simbolių hex reikšmė, o kiekvieno failo hash'as visada yra tas pats. Taip pat galima pamatyti, kad pakeitus vieną simbolį maišos funkcijos rezultatas (hash) visiškai pasikeičia.
-```shell
-Select: 1
--------
-Running: Hash output length, deterministic algorithm test
--------
+Testas atliktas 5000 kartų.
 
-data/empty.txt HASH: ffedfaffff95f4ffffcffe7ff77f77ff0205011604079908376002a838850300
-data/a.txt HASH: febfedeefd47f1cafdb8d7ecf88fff8b63562f778055f9bb00c067fdcb9d2b91
-data/b.txt HASH: a8f9d7b72cf565ffbf7cc7fff7e3f3ff79adc2ab291d29ca5e5651287b1511e2
-data/10000-1.txt HASH: faca7e3df7fcf7fbd33bdefff19bedc79bb7b3c3dfd7ddb85b83aa6817d0bb90
-data/10000-2.txt HASH: f76abbe7cf36ef7dfade7f55fdfdfefb5bcce68a5921bc7003c70fec0d6706e5
-data/10000-a.txt HASH: fdfed7eef7defcbe6f6fb53c5af7efbbcea362474a4472091525b61823af3251
-data/10000-b.txt HASH: dfdfaf6efeffdfbebfb9e2fc7ee5ef3b8b32e3a778e8f5f9552d2ef821a366c9
+| Github username | Line by line hashing average time (ms) | Points |
+| :---: | :---: | :---: |
+| [metroff](https://github.com/metroff/VU_BC_Hash) | 0.000081 | 1 |
+| [swoogie](https://github.com/swoogie/hashProject) | 0.00011 | 2 |
+| [rendertom](https://github.com/rendertom/VU-Blockchain-Task-1-Hash) | 0.000163 | 3 |
+| [Vabasou](https://github.com/Vabasou/blockChainTask1) | 0.000164 | 4 |
+| [MantasM2001](https://github.com/MantasM2001/VU-hash-function) | 0.001065 | 5 |
+| [domas404](https://github.com/domas404/blockchain) | 0.001445 | 6 |
+| [Miautawn](https://github.com/Miautawn/VU-blockchain) | 0.002513 | 7 |
+| [EimantasV](https://github.com/EimantasV/Hash) | 0.006275 | 8 |
+| [IvoskaJ](https://github.com/IvoskaJ/BlockChainPratybos) | 0.006323 | 9 |
+| [OvidijusV](https://github.com/OvidijusV/Bloku-grandiniu-technologijos) | 0.007854 | 10 |
 
-Length of hash function output is always the same!
-Hash function is deterministic!
-```
+### Whole file benchmark
 
-### Benchmark line by line hashing
-Šis metodas skirtas maišos spartai ištirti, maišant `konstitucija.txt' failą po vieną eilutę.
-```shell
-Select: 2
--------
-Running: Benchmark line by line hashing (MyHash)
-Input file: data/konstitucija.txt
-Number of iterations: 5000
--------
+Šis metodas skirtas palyginti maišos funkcijų greitaveiką, maišant visą `konstitucija.txt' failą iš karto.
 
-MyHash total time: 0.000357 s.
-MyHash average time per run: 0.000071 ms.
-```
-### Benchmark with MD5, SHA1, SHA256
-Šis metodas skirtas palyginti `myHash` maišos funkcijos greitaveiką su `MD5`, `SHA1`, `SHA256`, maišant `konstitucija.txt' failą po vieną eilutę.
-```shell
-Select: 3
--------
-Running: Benchmark line by line hashing (MyHash, md5, sha1, sha256)
-Input file: data/konstitucija.txt
-Number of iterations: 5000
--------
+Testas atliktas 5000 kartų.
 
-MyHash total: 0.000382 s., average: 0.000076 ms.
-md5 total: 0.001406 s., average: 0.000281 ms.
-sha1 total: 0.001419 s., average: 0.000284 ms.
-sha256 total: 0.002761 s., average: 0.000552 ms.
-```
-Taip pat galima palyginti `myHash` maišos funkcijos greitaveiką su `MD5`, `SHA1`, `SHA256`, maišant visą `konstitucija.txt' failą iš karto.
-```shell
-Select: 4
--------
-Running: Benchmark whole file hashing (MyHash, md5, sha1, sha256)
-Input file: data/konstitucija.txt
-Number of iterations: 5000
--------
+| Github username | Whole file hashing average time (ms) | Points |
+| :---: | :---: | :---: |
+| [rendertom](https://github.com/rendertom/VU-Blockchain-Task-1-Hash) | 0.062473 | 1 |
+| [swoogie](https://github.com/swoogie/hashProject) | 0.063311 | 2 |
+| [Vabasou](https://github.com/Vabasou/blockChainTask1) | 0.081967 | 3 |
+| [metroff](https://github.com/metroff/VU_BC_Hash) | 0.085529 | 4 |
+| [MantasM2001](https://github.com/MantasM2001/VU-hash-function) | 0.231015 | 5 |
+| [OvidijusV](https://github.com/OvidijusV/Bloku-grandiniu-technologijos) | 0.248274 | 6 |
+| [domas404](https://github.com/domas404/blockchain) | 4.862543 | 7 |
+| [IvoskaJ](https://github.com/IvoskaJ/BlockChainPratybos) | 6.409149 | 8 |
+| [Miautawn](https://github.com/Miautawn/VU-blockchain) | 8.994385 | 9 |
+| [EimantasV](https://github.com/EimantasV/Hash) | 30.588713 | 10 |
 
-MyHash total: 0.463400 s., average: 0.092680 ms.
-md5 total: 0.618884 s., average: 0.123777 ms.
-sha1 total: 1.226125 s., average: 0.245225 ms.
-sha256 total: 1.505921 s., average: 0.301184 ms.
-```
 ### Collision test
 Šis metodas skirtas palyginti ar dviejų skirtingų argumentų "hash'ai" nesutampa. Tam yra sugeneruojama 100000 atsitiktinių simbolių eilučių porų, kurios susideda iš skirtingo ilgio porų (10, 100, 500, 1000), pvz. (asdfg, hijkl).
-```shell
-Select: 5
--------
-Running: MyHash collision test
--------
+| Github username | Collision count | Points |
+| :---: | :---: | :---: |
+| [metroff](https://github.com/metroff/VU_BC_Hash) | 0 | 1 |
+| [rendertom](https://github.com/rendertom/VU-Blockchain-Task-1-Hash) | 0 | 1 |
+| [Miautawn](https://github.com/Miautawn/VU-blockchain) | 0 | 1 |
+| [IvoskaJ](https://github.com/IvoskaJ/BlockChainPratybos) | 0 | 1 |
+| [OvidijusV](https://github.com/OvidijusV/Bloku-grandiniu-technologijos) | 0 | 1 |
+| [swoogie](https://github.com/swoogie/hashProject) | 0 | 1 |
+| [Vabasou](https://github.com/Vabasou/blockChainTask1) | 0 | 1 |
+| [MantasM2001](https://github.com/MantasM2001/VU-hash-function) | 0 | 1 |
+| [EimantasV](https://github.com/EimantasV/Hash) | 0 | 1 |
+| [domas404](https://github.com/domas404/blockchain) | 11 | 2 |
 
-MyHash colision count: 0
-```
+
 ### Difference test
 Šis metodas skirtas palyginti maišos funkcijos išvesties skirtingumą bitų ir hex'ų lygmenyje. Tam yra sugeneruojama 100000 simbolių eilučių porų, kurios skiriasi vienu simboliu ir susideda iš skirtingo ilgio porų (10, 100, 500, 1000), pvz. (asdfg, bsdfg).
-```shell
-Select: 6
--------
-Running: MyHash output difference in bits and hex test
--------
 
-Hex max difference: hex: 100.00 %, bit:  57.42 %
-Hex avg difference: hex:  89.00 %, bit:  43.62 %
-Hex min difference: hex:  46.88 %, bit:  22.27 %
-```
----
-## Išvados
-Maišos funkcija atitinka visus reikalavimus nurodytus [užduotyje](#užduotis).
+Jei hex skirtumas didelis, tai ir bit skirtumas didelis (Jei bit'ų ir hex'ų lygmenyje 1-os vietos tai + 2 taškai, tačiau jei vieta paskutinė tai + 20 tašku). Tam, kad vertinimas būtų tikslesnis vidurkiai buvo sudėti.
 
-Paduodant bet kokio ilgio simbolių eilutę yra sugeneruojama vienoda 64 simbolių hex išvestis. Tai matoma [čia](#hash-algorithm-test).
+| Github username | Avg Hex Difference | Avg Bit Difference | Sum of averages | Points |
+| :---: | :---: | :---: | :---: | :---: |
+| [domas404](https://github.com/domas404/blockchain) | 94.721688 | 50.81327 | 145.534958 | 1 |
+| [Vabasou](https://github.com/Vabasou/blockChainTask1) | 93.90025 | 50.553867 | 144.454117 | 2 |
+| [swoogie](https://github.com/swoogie/hashProject) | 94.345078 | 50.064105 | 144.409183 | 3 |
+| [MantasM2001](https://github.com/MantasM2001/VU-hash-function) | 93.747172 | 50.006973 | 143.754145 | 4 |
+| [rendertom](https://github.com/rendertom/VU-Blockchain-Task-1-Hash) | 92.795469 | 49.370609 | 142.166078 | 5 |
+| [Miautawn](https://github.com/Miautawn/VU-blockchain) | 91.124078 | 48.270559 | 139.394637 | 6 |
+| [OvidijusV](https://github.com/OvidijusV/Bloku-grandiniu-technologijos) | 89.865234 | 44.377859 | 134.243093 | 7 |
+| [metroff](https://github.com/metroff/VU_BC_Hash) | 89.008734 | 43.627711 | 132.636445 | 8 |
+| [EimantasV](https://github.com/EimantasV/Hash) | 86.533203 | 42.518301 | 129.051504 | 9 |
+| [IvoskaJ](https://github.com/IvoskaJ/BlockChainPratybos) | 48.292234 | 32.415266 | 80.7075 | 10 |
 
-Maišos funkcija yra deterministinė, tos pačios įvesties "hash'as" visą laiką yra tas pats.
+## Apibendrinimas
+Vertiniama sudėjus visų etapų taškus pagal mažiausią taškų kiekį (kuo mažiau tuo geriau).
 
-Maišos funkcija yra gana greita ir efektyvi. Maišant failo `konstitucija.txt` turinį po vieną eilutę, vidutinis maišymo laikas 0.00007ms. (Testo rezultatus galima pamatyti [čia](#benchmark-line-by-line-hashing)). Lyginant funkciją su kitais algoritmais (`md5`, `sha1`, `sha256`), sukurta maišos funkcija `myHash` yra greitesnė (nuo 1,3 iki 2,5 karto) testuotais atvejais (Testo rezultatus galima pamatyti [čia](#benchmark-with-md5-sha1-sha256)).
+| Github username | Sum of points | Overall place |
+| :---: | :---: | :---: |
+| [swoogie](https://github.com/swoogie/hashProject) | 8 | 1 |
+| [Vabasou](https://github.com/Vabasou/blockChainTask1) | 10 | 2 |
+| [rendertom](https://github.com/rendertom/VU-Blockchain-Task-1-Hash) | 10 | 2 |
+| [metroff](https://github.com/metroff/VU_BC_Hash) | 14 | 3 |
+| [MantasM2001](https://github.com/MantasM2001/VU-hash-function) | 15 | 4 |
+| [domas404](https://github.com/domas404/blockchain) | 16 | 5 |
+| [Miautawn](https://github.com/Miautawn/VU-blockchain) | 23 | 6 |
+| [OvidijusV](https://github.com/OvidijusV/Bloku-grandiniu-technologijos) | 24 | 7 |
+| [EimantasV](https://github.com/EimantasV/Hash) | 28 | 8 |
+| [IvoskaJ](https://github.com/IvoskaJ/BlockChainPratybos) | 28 | 8 |
 
-Maišos funkcijos `myHash` atsparumas kolizijai yra labai didelis. Iš 100000 skirtingų simbolių eilučių porų nėra nė vienos kurių "hash'ai" sutaptų (Testo rezultatus galima pamatyti [čia](#collision-test)).
+Pirma vietą užėmė [swoogie](https://github.com/swoogie/hashProject) algoritmas. Greičiausias buvo [metroff](https://github.com/metroff/VU_BC_Hash) (hash'uojant eilutėmis) ir [rendertom](https://github.com/rendertom/VU-Blockchain-Task-1-Hash) (hash'uojant visą failą) algoritmai. Didžiausiu skirtingumu pasižymėjo [domas404](https://github.com/domas404/blockchain) algoritmas.
 
-Maišos funkcijos rezultatas pakeitus įvedimą vienų simboliu (pvz.: iš 'hello world' į 'heloo world') iš esmės pasikeičia. Algoritmas tenkina lavinos efekto reikalavimus (tai galima matyt [čia](#hash-algorithm-test)). Taip pat atlikus [išvesties skirtingumo testą](#difference-test) yra matoma, kad vidutinis dviejų įvesčių, kurios skiriasi vienu simboliu, "hash'ų" simbolių hex skirtingumas yra 89 procentai.
+### Bendra rezultatų lentelė
+| Github username | Line by line hashing average time (ms) | Whole file hashing average time (ms) | Collision count | Avg Hex Difference | Avg Bit Difference |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| [metroff](https://github.com/metroff/VU_BC_Hash) | 0.000081 | 0.085529 | 0 | 89.008734 | 43.627711 |
+| [rendertom](https://github.com/rendertom/VU-Blockchain-Task-1-Hash) | 0.000163 | 0.062473 | 0 | 92.795469 | 49.370609 |
+| [Miautawn](https://github.com/Miautawn/VU-blockchain) | 0.002513 | 8.994385 | 0 | 91.124078 | 48.270559 |
+| [domas404](https://github.com/domas404/blockchain) | 0.001445 | 4.862543 | 11 | 94.721688 | 50.81327 |
+| [IvoskaJ](https://github.com/IvoskaJ/BlockChainPratybos) | 0.006323 | 6.409149 | 0 | 48.292234 | 32.415266 |
+| [OvidijusV](https://github.com/OvidijusV/Bloku-grandiniu-technologijos) | 0.007854 | 0.248274 | 0 | 89.865234 | 44.377859 |
+| [swoogie](https://github.com/swoogie/hashProject) | 0.00011 | 0.063311 | 0 | 94.345078 | 50.064105 |
+| [Vabasou](https://github.com/Vabasou/blockChainTask1) | 0.000164 | 0.081967 | 0 | 93.90025 | 50.553867 |
+| [MantasM2001](https://github.com/MantasM2001/VU-hash-function) | 0.001065 | 0.231015 | 0 | 93.747172 | 50.006973 |
+| [EimantasV](https://github.com/EimantasV/Hash) | 0.006275 | 30.588713 | 0 | 86.533203 | 42.518301 |
